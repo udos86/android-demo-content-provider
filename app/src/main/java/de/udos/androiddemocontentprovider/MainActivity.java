@@ -1,12 +1,16 @@
 package de.udos.androiddemocontentprovider;
 
+import android.Manifest;
 import android.app.ListActivity;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
 import android.content.Loader;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ListView;
@@ -17,6 +21,7 @@ import java.util.ArrayList;
 public class MainActivity extends ListActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int LOADER_ID_ALBUMS_ID = 0;
+    private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 999;
 
     private static final Uri ALBUMS_EXTERNAL = android.provider.MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
     private static final String COLUMN_ALBUM_ID = android.provider.MediaStore.Audio.Albums._ID;
@@ -33,7 +38,15 @@ public class MainActivity extends ListActivity implements LoaderManager.LoaderCa
         super.onCreate(savedInstanceState);
 
         mAlbums = new ArrayList<>();
-        loadAlbums(true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE);
+
+        } else {
+            loadAlbums(true);
+        }
 
 		/*
 		mCAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, c,
@@ -100,5 +113,21 @@ public class MainActivity extends ListActivity implements LoaderManager.LoaderCa
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         //Nothing to do
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        switch (requestCode) {
+
+            case REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE: {
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    loadAlbums(true);
+                }
+            }
+        }
+
     }
 }
